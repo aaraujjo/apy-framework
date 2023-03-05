@@ -1,0 +1,26 @@
+{
+    "Order": {
+        "primary": "id",
+        "table": "order",
+        "model": {
+            "id": {
+                "type": "int"
+            },
+            "person": {
+                "type": "int"
+            },
+            "items": {
+                "type": "varchar",
+                "lenght": 255
+            },
+            "cost": {
+                "type": "varchar",
+                "lenght": 11
+            },
+            "payment": {
+                "type": "int",
+                "default": null
+            }
+        }
+    }
+}
