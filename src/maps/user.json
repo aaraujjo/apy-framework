@@ -1,0 +1,43 @@
+{
+    "User": {
+        "primary": "id",
+        "table": "user",
+        "model": {
+            "id": {
+                "type": "int"
+            },
+            "email": {
+                "type": "varchar",
+                "lenght": 120
+            },
+            "password": {
+                "type": "varchar",
+                "lenght": 255
+            },
+            "type": {
+                "type": "varchar",
+                "lenght": 10
+            },
+            "person": {
+                "type": "int",
+                "default": null
+            }
+        },
+        "data": [
+            {
+                "id": 1,
+                "email": "admin@apy.com",
+                "password": "admin",
+                "type": "ADMIN",
+                "person": 1
+            },
+            {
+                "id": 2,
+                "email": "user@apy.com",
+                "password": "user",
+                "type": "USER",
+                "person": 2
+            }
+        ]
+    }
+}
