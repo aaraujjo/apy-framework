@@ -6,6 +6,7 @@ foreach (glob("./libs/APY/include/*.php") as $filename)
 
 class APY
 {
+    private static $Controllers;
     private static $Container;
     private static $Response;
     private static $Request;
@@ -24,11 +25,10 @@ class APY
             self::$Response = new Response(200, "Welcome to APY Framework");
 
             // Load Controllers
-            foreach (glob($options['controllers'] . "/*.php") as $filename)
-                require_once($filename);
+            self::$Controllers = self::controllers($options['controllers']);
 
             // Instance UI
-            self::$UI = new RestUI(["controllers" => self::controllers()]);
+            self::$UI = new RestUI(["controllers" => self::$Controllers]);
 
             // Instance Request
             self::$Request = new Request();
@@ -70,14 +70,20 @@ class APY
         echo $Response;
     }
 
-    static function controllers()
+    static function controllers($path)
     {
-        $Controllers = [];
-        foreach (get_declared_classes() as $class) {
-            if (is_subclass_of($class, "Controller")) {
-                $Controllers[$class] = (new $class(self::$Container))->methods();
+        if (is_dir($path)) {
+            foreach (glob($path . "/*.php") as $filename)
+                require_once($filename);
+
+            $Controllers = [];
+            foreach (get_declared_classes() as $class) {
+                if (is_subclass_of($class, "Controller")) {
+                    $Controllers[$class] = (new $class(self::$Container))->methods();
+                }
             }
+            return $Controllers;
         }
-        return $Controllers;
+        die("APY Options::Controllers path does not exists");
     }
 }
