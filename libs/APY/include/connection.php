@@ -11,14 +11,14 @@ class Connection
         $this->Name = $env['name'];
     }
 
-    function table_exists($table)
-    {
-        $result = $this->execute("SELECT * FROM information_schema.tables WHERE table_schema = '" . $this->Name . "' AND table_name = '" . $table . "' LIMIT 1;");
-        if (sizeof($result) > 0)
-            return true;
+    // function table_exists($table)
+    // {
+    //     $result = $this->execute("SELECT * FROM information_schema.tables WHERE table_schema = '" . $this->Name . "' AND table_name = '" . $table . "' LIMIT 1;");
+    //     if (sizeof($result) > 0)
+    //         return true;
 
-        return false;
-    }
+    //     return false;
+    // }
 
     function execute($query, $values = [])
     {
@@ -30,15 +30,8 @@ class Connection
             }
         } else {
             $Statement = $this->Database->prepare($query);
-            if ($Statement && $Statement->execute($values)) {
-
-                if ($Statement->insert_id > 0)
-                    return $Statement->insert_id;
-                else if ($Statement->field_count > 0)
-                    return $Statement->get_result()->fetch_all(MYSQLI_ASSOC);
-                else
-                    return $Statement;
-            }
+            if ($Statement && $Statement->execute($values))
+                return $Statement->get_result();
         }
         return null;
     }

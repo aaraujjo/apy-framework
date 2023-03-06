@@ -11,7 +11,12 @@ class Auth extends Controller
 
     public function login($email, $password): POST
     {
-        return Response::POST(200, ($this->AuthGuard)->createToken(1));
+        if ($UserRepository = $this->Context->Repository("User")) {
+            if ($User = $UserRepository->select(["id"])->where(["email" => $email, "password" => $password])->first()) {
+                $Token = $this->AuthGuard->createToken($User["id"]);
+                return Response::POST(200, $Token);
+            }
+        }
+        return Response::POST(400, "E-mail ou senha incorretos.");
     }
-
 }

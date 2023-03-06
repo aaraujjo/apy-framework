@@ -13,25 +13,28 @@ class Controller
         $this->AuthGuard = $args['guard'] ?? null;
     }
 
-    function call($name, $arguments)
+    function call($request)
     {
-        if ($method = new ReflectionMethod($this, $name)) {
-            if ($method->getReturnType() != $_SERVER['REQUEST_METHOD'])
-                die("Método diferente do retorno");
+        $name = $request->Method;
+        if (method_exists($this, $name)) {
+            if ($method = new ReflectionMethod($this, $name)) {
+                if ($method->getReturnType() != $_SERVER['REQUEST_METHOD'])
+                    return (["Code" => "400", "Message" => "Método diferente"]);
 
-            if ($method->isProtected() && !($this->AuthGuard)->isValidToken($this->Token))
-                die("Não autorizado");
+                if ($method->isProtected() && !($this->AuthGuard)->isValidToken($this->Token))
+                    return (["Code" => "403", "Message" => "Não autenticado"]);
 
-            $args = [];
-            foreach ($method->getParameters() as $parameter) {
-                if (!isset($arguments[$parameter->getName()]) && !$parameter->isOptional())
-                    die($parameter->getName() . " Parameter necessary");
+                $args = [];
+                foreach ($method->getParameters() as $parameter) {
+                    if (!isset($request->Args[$parameter->getName()]) && !$parameter->isOptional())
+                        return (["Code" => "403", "Message" => "Parameter necessary"]);
 
-                $args[$parameter->getName()] = $arguments[$parameter->getName()];
+                    $args[$parameter->getName()] = $request->Args[$parameter->getName()];
+                }
+                return $this->$name(...$args);
             }
-            return $this->$name(...$args);
         }
-        die("cannot execute method");
+        return (["Code" => "403", "Message" => "cannot execute method"]);
     }
 
     function methods()
@@ -42,7 +45,7 @@ class Controller
         foreach (array_diff(get_class_methods($this), $diff) as $name) {
             $reflection = new ReflectionMethod($this, $name);
             $methods[$name] = [
-                "type" =>  ($reflection->getReturnType()->getName()),
+                "type" => ($reflection->getReturnType()->getName()),
                 "parameters" => array_diff($reflection->getParameters(), $diff)
             ];
         }

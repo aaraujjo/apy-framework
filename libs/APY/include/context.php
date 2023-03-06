@@ -3,19 +3,19 @@
 class Context
 {
     private $Connection;
-    private $Map;
+    private $Migrations;
 
-    function __construct($connection, $map)
+    function __construct($connection, $migrations)
     {
-        if (is_dir($map)) {
+        if (is_dir($migrations)) {
             $Map = [];
-            foreach (glob($map . "/*.json") as $filename) {
+            foreach (glob($migrations . "/*.json") as $filename) {
                 if ($options = json_decode(file_get_contents($filename), true))
                     $Map = array_merge($Map, $options);
             }
-            $this->Map = $Map;
-        } else if (str_contains($map, ".json") && file_exists($map))
-            $this->Map = json_decode(file_get_contents($map), true);
+            $this->Migrations = $Map;
+        } else if (str_contains($migrations, ".json") && file_exists($migrations))
+            $this->Migrations = json_decode(file_get_contents($migrations), true);
         else
             die("Context Options::Map does not exists");
 
@@ -26,7 +26,7 @@ class Context
     function load($override = true)
     {
         $Loaded = [];
-        foreach (array_keys($this->Map) as $Name) {
+        foreach (array_keys($this->Migrations) as $Name) {
             $Loaded[$Name] = $Name . " " . ($this->Repository($Name)->load($override) ? "was loaded with sucessfull" : "cannot load");
         }
         return $Loaded;
@@ -34,7 +34,7 @@ class Context
 
     function Repository($name)
     {
-        $options = $this->Map[$name] ?? null;
+        $options = $this->Migrations[$name] ?? null;
         if (isset($options)) {
             $options['connection'] = $this->Connection;
             $options['name'] = ucfirst($name);

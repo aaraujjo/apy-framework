@@ -11,7 +11,7 @@ class ControllerComponent
     {
         $Methods = [];
         foreach ($methods as $method => $parameters) {
-            $Methods[] = (new MethodComponent($method, $parameters['type'], $parameters['parameters']))->render();
+            $Methods[] = (new MethodComponent($controller, $method, $parameters['type'], $parameters['parameters']))->render();
         }
 
         $this->Methods = implode("", $Methods);

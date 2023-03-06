@@ -5,29 +5,41 @@ foreach (glob("./libs/APY/ui/components/*.php") as $filename)
 
 class RestUI
 {
-    private $Style;
-    private $Debugger;
-    private $Controllers;
+    private $Controllers = null;
+    private $Debugger = null;
 
-    function __construct($controllers = [], $debugger = null)
+    function __construct($state = [])
+    {
+        $this->state($state);
+    }
+
+    function state($values = [])
+    {
+        $this->Controllers = $values['controllers'] ?? $this->Controllers;
+        $this->Debugger = $values['debugger'] ?? $this->Debugger;
+        return $this->render();
+    }
+
+    function controllers()
     {
         $Controllers = [];
-        foreach ($controllers as $controller => $methods)
+        foreach ($this->Controllers as $controller => $methods)
             $Controllers[] = (new ControllerComponent($controller, $methods))->render();
 
-        $this->Style = file_get_contents("./libs/APY/ui/style/style.css");
-        $this->Controllers = implode("", $Controllers);
+        return implode("", $Controllers);
     }
 
     function render()
     {
+        $style = file_get_contents("./libs/APY/ui/style/style.css");
+
         return <<<HTML
             <html>
                 <head>
                     <title>APY</title>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>{$this->Style}</style> 
+                    <style>{$style}</style> 
                 </head>
                 <body>
                     <div class="header">
@@ -44,7 +56,7 @@ class RestUI
                             <div class="pannel">
                                 <h1>Controllers</h1>
                                 <div class="controllers">
-                                    {$this->Controllers}
+                                    {$this->controllers()}
                                 </div>
                             </div>
                             <!-- <div class="pannel">
@@ -53,6 +65,7 @@ class RestUI
                         </div>
                         <div class="debugger">
                             <h1>Debugger</h1>
+                            <textarea>{$this->Debugger}</textarea>
                         </div>
                     </div>
                 </body>

@@ -60,7 +60,7 @@ class Builder
         foreach (array_keys($values) as $key)
             $this->Query[] = "SET " . $key . " = ?";
 
-        $this->Values = array_merge($this->Values, $values);
+        $this->Values = array_merge($this->Values, array_values($values));
         return $this;
     }
 
@@ -70,7 +70,7 @@ class Builder
             foreach (array_keys($conditions) as $condition)
                 $this->Query[] = (str_contains($this->raw(), "WHERE") ? "AND" : "WHERE") . " " . $condition . " = ?";
 
-            $this->Values = array_merge($this->Values, $conditions);
+            $this->Values = array_merge($this->Values, array_values($conditions));
         }
         return $this;
     }
@@ -79,7 +79,7 @@ class Builder
     {
         if (sizeof($conditions) > 0) {
             foreach (array_keys($conditions) as $condition)
-                $this->Query[] = (str_contains($this->raw(), "HAVING") ? "AND" : "HAVING") . " " . $condition . " = ?";
+                $this->Query[] = (str_contains($this->raw(), "HAVING") ? "AND" : "HAVING") . " " . $condition . " = '?'";
 
             $this->Values = array_merge($this->Values, $conditions);
         }
@@ -118,5 +118,27 @@ class Builder
         $result = $this->Connection->execute($this->raw(), $this->Values);
         $this->Query = [];
         return $result;
+    }
+
+    function list()
+    {
+        if ($list = $this->result()->fetch_all(MYSQLI_ASSOC)) {
+            if (sizeof($list) > 0)
+                return $list;
+        }
+        return [];
+    }
+
+    function first()
+    {
+        if (!str_contains($this->raw(), "LIMIT"))
+            $this->limit([1]);
+
+        if ($list = $this->list()) {
+            if (isset($list[0]))
+                return $list[0];
+        }
+
+        return null;
     }
 }
