@@ -2,7 +2,7 @@
 
 class Builder
 {
-    private $Connection;
+    public $Connection;
     public $Values;
     public $Query;
     public $Table;

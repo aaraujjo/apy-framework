@@ -2,7 +2,7 @@
 
 class Connection
 {
-    private $Name;
+    public $Name;
     private $Database;
 
     function __construct($env)

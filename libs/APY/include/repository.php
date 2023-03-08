@@ -1,6 +1,7 @@
 <?php
 
 require_once("builder.php");
+require_once("const.php");
 
 class Repository extends Builder
 {
@@ -11,59 +12,125 @@ class Repository extends Builder
 
     function __construct($args = [])
     {
-        $this->Primary = $args['primary'] ?? null;
-        $this->Model = $args['model'] ?? null;
-        $this->Name = $args['name'] ?? null;
-        $this->Data = $args['data'] ?? [];
         parent::__construct($args);
-
-        $this->Keys = array_keys($args['model']);
-
         if (!isset($this->Table))
-            die("Repository " . $this->Name . "::Table cannot be empty");
-        elseif (!isset($this->Model) || sizeof($this->Model) < 1)
-            die("Repository " . $this->Name . "::Model cannot be empty");
-    }
+            die("Repository Table::" . $this->Table . " cannot be empty");
 
-    function load($override = false)
-    {
-        if ($override)
-            $this->Query[] = "DROP TABLE IF EXISTS `" . $this->Table . "`;";
+        if (!isset($args['model'])) {
+            if ($table = $this->Connection->execute("DESCRIBE `" . $this->Table . "`")->fetch_all(MYSQLI_ASSOC)) {
+                if (sizeof($table) > 0) {
+                    $args['model'] = [];
 
-        $this->Query[] = "CREATE TABLE IF NOT EXISTS `" . $this->Table . "` (";
+                    foreach ($table as $column) {
+                        $args['model'][$column['Field']] = ['type' => $column['Type']];
 
-        $Tables = [];
-        foreach ($this->Model as $Prop => $Params) {
-            $Table = [];
-            $Table[] = "`" . $Prop . "`";
-            $Table[] = $Params['type'] ?? 'int';
-            $Table[] = "(" . ($Params['lenght'] ?? 11) . ")";
-            $Table[] = (isset($Params['type']) && $Params['type'] == 'varchar') ? "COLLATE utf8_unicode_ci" : null;
-            $Table[] = (!array_key_exists("default", $Params)) ? "NOT NULL" : "DEFAULT" . (($Params['default'] != null && strtolower($Params['default']) != "null") ? (" = " . $Params['default']) : " NULL");
+                        if (($column['Null'] != 'NO')) {
+                            $args[$column['Field']]['default'] = strval($column['Default']);
+                        }
 
-            $Tables[] = implode(" ", $Table);
+                        if (isset($column['Extra']))
+                            $args[$column['Field']]['extra'] = $column['Extra'];
+
+                        if ($column['Key'] == 'PRI')
+                            $args['primary'] = $column['Field'];
+                    }
+                }
+            }
         }
 
-        $this->Query[] = implode(",", $Tables);
+        if (!isset($args['model']) || sizeof($args['model']) < 1)
+            die("Repository " . ucfirst($this->Table) . "::Model cannot be empty");
+
+        $this->Keys = array_keys($args['model']) ?? [];
+        $this->Primary = $args['primary'] ?? null;
+        $this->Model = $args['model'] ?? [];
+        $this->Data = $args['data'] ?? [];
+    }
+
+
+    function __instal()
+    {
+        $this->Query[] = "DROP TABLE IF EXISTS `" . $this->Table . "`;";
+        $this->Query[] = "CREATE TABLE IF NOT EXISTS `" . $this->Table . "` (";
+
+        $this->Query[] = implode(",", $this->__columns());
         $this->Query[] = ") ENGINE=InnoDB DEFAULT CHARACTER SET = utf8;";
+
+        if (isset($this->Primary))
+            $this->Query[] = "ALTER TABLE `" . $this->Table . "` ADD PRIMARY KEY (`" . $this->Primary . "`)";
+
         try {
+            $this->result();
+            if (sizeof($this->Data) > 0)
+                $this->insert($this->Data)->result();
 
-            if ($this->result()) {
-                if (sizeof($this->Data) > 0)
-                    $this->insert($this->Data)->result();
-
-                return true;
-            }
+            return true;
         } catch (Exception $err) {
             die($err->getMessage());
         }
         return false;
     }
 
-    function unload()
+    function __uninstall()
     {
         $this->Query[] = "DROP TABLE IF EXISTS " . $this->Table . ";";
-        return parent::result();
+        return $this->result();
+    }
+
+    function __columns()
+    {
+        $Columns = [];
+        foreach ($this->Model as $Prop => $Params) {
+            $Column = [];
+            $Column[] = "`" . $Prop . "`";
+            if (!isset($Params['type']))
+                die("falta type");
+            else {
+                $Column[] = $Params['type'];
+
+                preg_match("/\(.*\)/", $Params['type'], $testando);
+                if (!isset($testando[0]))
+                    $Column[] = "(" . DefaultLenght[$Params['type']] . ")" ?? null;
+
+                $Column[] = DefaultCollation[$Params['type']] ?? null;
+                $Column[] = (!array_key_exists("default", $Params)) ? "NOT NULL" : "DEFAULT " . ((strtolower(strval($Params['default'])) != "") ? (" = " . $Params['default']) : " NULL");
+                $Columns[] = implode(" ", $Column);
+            }
+        }
+        return $Columns;
+    }
+
+    function __refresh()
+    {
+        $this->Query[] = "ALTER TABLE `" . $this->Table . "`";
+
+        $Modifies = [];
+        foreach ($this->__columns() as $column)
+            $Modifies[] = "MODIFY " . $column;
+
+        $this->Query[] = implode(",", $Modifies) . ";";
+
+        try {
+            $this->result();
+            return true;
+        } catch (Exception $err) {
+            die($err->getMessage());
+        }
+        return false;
+    }
+
+    function __save($path)
+    {
+        $MigrationFile = fopen($path . "/" . $this->Table . ".json", "w") or die("Unable to open file!");
+
+        $RepositoryJson = [];
+        $RepositoryJson[$this->Table] = [
+            "primary" => $this->Primary,
+            "model" => $this->Model
+        ];
+
+        fwrite($MigrationFile, json_encode($RepositoryJson, JSON_PRETTY_PRINT));
+        fclose($MigrationFile);
     }
 
     function parse($values, $nullable = false)
