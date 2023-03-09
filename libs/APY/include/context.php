@@ -24,22 +24,26 @@ class Context
         $this->Path = $migrations;
     }
 
-    function load($override = true)
+    function equalize()
     {
-        // $Loaded = [];
-        // foreach (array_keys($this->Migrations) as $Name) {
-        //     $Loaded[$Name] = $Name . " " . ($this->Repository($Name)->load($override) ? "was loaded with sucessfull" : "cannot load");
-        // }
-        // return $Loaded;
         if (isset($this->Path)) {
             if ($tables = $this->Connection->execute("SHOW TABLES")->fetch_all(MYSQLI_ASSOC)) {
+                $repositories = [];
                 if (sizeof($tables) > 0) {
                     foreach ($tables as $data) {
+                        $repositories[] = $data['Tables_in_apy'];
                         if (isset($data['Tables_in_apy']) && !array_key_exists($data['Tables_in_apy'], $this->Migrations))
                             $this->Repository($data['Tables_in_apy'])->__save($this->Path);
                     }
                 }
+                foreach (array_keys($this->Migrations) as $repository) {
+                    if (array_search($repository, $repositories, true) != "")
+                        $this->Repository($repository)->__refresh();
+                    else
+                        $this->Repository($repository)->__instal();
+                }
             }
+            return (["Code" => 200, "Message" => "Banco de dados equalizado com sucesso"]);
         }
     }
 

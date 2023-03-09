@@ -1,0 +1,29 @@
+{
+    "address": {
+        "primary": null,
+        "model": {
+            "id": {
+                "type": "int(11)"
+            },
+            "cep": {
+                "type": "varchar(8)"
+            },
+            "street": {
+                "type": "varchar(100)"
+            },
+            "number": {
+                "type": "varchar(15)"
+            },
+            "complement": {
+                "type": "varchar(30)",
+                "default": "NULL"
+            },
+            "location": {
+                "type": "varchar(100)"
+            },
+            "person": {
+                "type": "int(11)"
+            }
+        }
+    }
+}

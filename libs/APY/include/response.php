@@ -20,12 +20,4 @@ class Response
     static function POST($code = 200, $message = "") {
         return new POST($code, $message);
     }
-
-    static function PUT($code = 200, $message = "") {
-        return new PUT($code, $message);
-    }
-
-    static function DELETE($code = 200, $message = "") {
-        return new DELETE($code, $message);
-    }
 }

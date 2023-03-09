@@ -24,12 +24,12 @@ class Repository extends Builder
                     foreach ($table as $column) {
                         $args['model'][$column['Field']] = ['type' => $column['Type']];
 
-                        if (($column['Null'] != 'NO')) {
-                            $args[$column['Field']]['default'] = strval($column['Default']);
-                        }
+                        if (($column['Null'] != 'NO'))
+                            $args['model'][$column['Field']]['default'] = ($column['Default'] != "") ? $column['Default'] : "NULL";
 
-                        if (isset($column['Extra']))
-                            $args[$column['Field']]['extra'] = $column['Extra'];
+
+                        if ($column['Extra'] != "")
+                            $args['model'][$column['Field']]['extra'] = $column['Extra'];
 
                         if ($column['Key'] == 'PRI')
                             $args['primary'] = $column['Field'];
@@ -68,6 +68,7 @@ class Repository extends Builder
         } catch (Exception $err) {
             die($err->getMessage());
         }
+        print_r($this->raw());
         return false;
     }
 
@@ -93,7 +94,7 @@ class Repository extends Builder
                     $Column[] = "(" . DefaultLenght[$Params['type']] . ")" ?? null;
 
                 $Column[] = DefaultCollation[$Params['type']] ?? null;
-                $Column[] = (!array_key_exists("default", $Params)) ? "NOT NULL" : "DEFAULT " . ((strtolower(strval($Params['default'])) != "") ? (" = " . $Params['default']) : " NULL");
+                $Column[] = (!array_key_exists("default", $Params)) ? "NOT NULL" : "DEFAULT " . ((strtolower($Params['default']) == "" || strtolower($Params['default']) == "null") ? "NULL" : $Params['default']);
                 $Columns[] = implode(" ", $Column);
             }
         }
@@ -109,7 +110,7 @@ class Repository extends Builder
             $Modifies[] = "MODIFY " . $column;
 
         $this->Query[] = implode(",", $Modifies) . ";";
-
+        
         try {
             $this->result();
             return true;
@@ -121,16 +122,19 @@ class Repository extends Builder
 
     function __save($path)
     {
-        $MigrationFile = fopen($path . "/" . $this->Table . ".json", "w") or die("Unable to open file!");
+        print_r($path);
+        if (isset($path) && is_dir($path)) {
+            $MigrationFile = fopen($path . "/" . $this->Table . ".json", "w") or die("Unable to open file!");
 
-        $RepositoryJson = [];
-        $RepositoryJson[$this->Table] = [
-            "primary" => $this->Primary,
-            "model" => $this->Model
-        ];
+            $RepositoryJson = [];
+            $RepositoryJson[$this->Table] = [
+                "primary" => $this->Primary,
+                "model" => $this->Model
+            ];
 
-        fwrite($MigrationFile, json_encode($RepositoryJson, JSON_PRETTY_PRINT));
-        fclose($MigrationFile);
+            fwrite($MigrationFile, json_encode($RepositoryJson, JSON_PRETTY_PRINT));
+            fclose($MigrationFile);
+        }
     }
 
     function parse($values, $nullable = false)

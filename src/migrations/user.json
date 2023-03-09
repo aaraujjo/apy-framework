@@ -1,0 +1,24 @@
+{
+    "user": {
+        "primary": "id",
+        "model": {
+            "id": {
+                "type": "int(11)"
+            },
+            "email": {
+                "type": "varchar(120)"
+            },
+            "password": {
+                "type": "varchar(255)"
+            },
+            "type": {
+                "type": "varchar(10)",
+                "default": "NULL"
+            },
+            "person": {
+                "type": "int(11)",
+                "default": "NULL"
+            }
+        }
+    }
+}

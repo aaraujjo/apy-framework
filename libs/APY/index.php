@@ -45,13 +45,17 @@ class APY
     static function process()
     {
         if (!empty(self::$Request)) {
-            try {
-                if ($Controller = self::$Request->Controller) {
-                    if ($Controller = new $Controller(self::$Container))
-                        self::$Response = $Controller->call(self::$Request);
+            if (isset(self::$Request->Args['ui']) && self::$Request->Args['ui'] == 'Equalize Database') {
+                self::$Response = (self::$Container['context'])->equalize();
+            } else {
+                try {
+                    if ($Controller = self::$Request->Controller) {
+                        if ($Controller = new $Controller(self::$Container))
+                            self::$Response = $Controller->call(self::$Request);
+                    }
+                } catch (Exception $err) {
+                    die($err->getMessage());
                 }
-            } catch (Exception $err) {
-                die($err->getMessage());
             }
         }
         self::response();

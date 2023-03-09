@@ -1,0 +1,23 @@
+{
+    "order": {
+        "primary": null,
+        "model": {
+            "id": {
+                "type": "int(11)"
+            },
+            "person": {
+                "type": "int(11)"
+            },
+            "items": {
+                "type": "varchar(255)"
+            },
+            "cost": {
+                "type": "varchar(11)"
+            },
+            "payment": {
+                "type": "int(11)",
+                "default": "NULL"
+            }
+        }
+    }
+}

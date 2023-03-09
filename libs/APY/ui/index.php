@@ -48,7 +48,7 @@ class RestUI
                             <a href="#" class="">REST UI</a>
                         </div>
                         <form method="post" class="navForm">
-                            <input type="submit" value="Refresh Database" class="button">
+                            <input type="submit" name="ui" value="Equalize Database" class="button">
                         </form>
                     </div>
                     <div class="body">

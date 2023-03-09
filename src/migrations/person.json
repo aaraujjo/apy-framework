@@ -1,0 +1,19 @@
+{
+    "person": {
+        "primary": null,
+        "model": {
+            "id": {
+                "type": "int(11)"
+            },
+            "name": {
+                "type": "varchar(50)"
+            },
+            "phone": {
+                "type": "varchar(11)"
+            },
+            "email": {
+                "type": "varchar(100)"
+            }
+        }
+    }
+}
