@@ -7,7 +7,7 @@ $options = [
     "connection" => ["host" => "localhost", "user" => "root", "key" => "", "name" => "apy"],
     "controllers" => "./src/controllers",
     "migrations" => "./src/migrations",
-    "ui" => true,
+    "ui" => "true",
 ];
 
-APY::configure($options);
+APY::configure($options, true);
